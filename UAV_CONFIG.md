@@ -20,7 +20,7 @@
 ## 1. 硬件配置
 
 ### 1.1 核心硬件
-- **机载计算机**: NVIDIA Jetson (用户名: nvidia, 密码: nvidia)
+- **机载计算机**: NVIDIA Jetson（请自行设置用户名和密码）
 - **飞控**: PX4 (通过 /dev/ttyACM0 连接，波特率 921600)
 - **激光雷达**: Livox MID-360
 - **IMU**: CJ02 外部 IMU（已替换内置 IMU）
@@ -152,8 +152,8 @@ drone_id = 0      # 无人机 ID
 **在 `~/.bashrc` 中**:
 ```bash
 # ROS 主从机配置
-export ROS_IP=192.168.31.141          # 本机 IP（wlan0）
-export ROS_MASTER_URI=http://192.168.31.141:11311
+export ROS_IP=<your_jetson_ip>          # 本机 IP（wlan0）
+export ROS_MASTER_URI=http://<your_jetson_ip>:11311
 ```
 
 **启动脚本中的 source 顺序**:
@@ -171,23 +171,22 @@ source /mnt/nvme/ws/catkin_ws/devel/setup.bash --extend  # 可选
 
 ### 5.1 无人机网络
 - **接口**: wlan0
-- **IP 地址**: 192.168.31.141（固定）
-- **ROS Master**: http://192.168.31.141:11311
+- **IP 地址**: <your_jetson_ip>（固定）
+- **ROS Master**: http://<your_jetson_ip>:11311
 
 ### 5.2 远程电脑配置
 
-如需在远程电脑（如 192.168.31.136）上运行 RViz 或 rostopic：
+如需在远程电脑（如 <your_remote_ip>）上运行 RViz 或 rostopic：
 
 ```bash
-export ROS_MASTER_URI=http://192.168.31.141:11311
-export ROS_IP=192.168.31.136  # 改为你的电脑 IP
+export ROS_MASTER_URI=http://<your_jetson_ip>:11311
+export ROS_IP=<your_remote_ip>  # 改为你的电脑 IP
 ```
 
 ### 5.3 SSH 连接
 
 ```bash
-ssh -i ~/.ssh/id_ed25519_model_health nvidia@192.168.31.141
-# 或使用密码: nvidia
+ssh -i ~/.ssh/id_ed25519_model_health <user>@<your_jetson_ip>
 ```
 
 ---
@@ -306,8 +305,6 @@ fsm/home_arrive_thresh = 0.3      # 到达判定距离（m）
 #### 基础环境
 ```bash
 # 用户
-用户名: nvidia
-密码: nvidia
 
 # 挂载 NVMe 存储
 sudo mkdir -p /mnt/nvme
@@ -363,11 +360,11 @@ catkin_make
 
 ```bash
 # 启动脚本
-scp *.sh nvidia@192.168.31.141:~/
-scp *.py nvidia@192.168.31.141:~/
+scp *.sh <user>@<your_jetson_ip>:~/
+scp *.py <user>@<your_jetson_ip>:~/
 
 # FAST-LIO 配置
-scp mid360_cj02.yaml nvidia@192.168.31.141:/mnt/nvme/ws/fastlio_ws/src/FAST_LIO/config/
+scp mid360_cj02.yaml <user>@<your_jetson_ip>:/mnt/nvme/ws/fastlio_ws/src/FAST_LIO/config/
 ```
 
 ### 8.5 校准外参
@@ -391,8 +388,8 @@ python3 calib_dual_imu.py
 
 编辑 `~/.bashrc`，添加：
 ```bash
-export ROS_IP=192.168.31.141  # 改为实际 IP
-export ROS_MASTER_URI=http://192.168.31.141:11311
+export ROS_IP=<your_jetson_ip>  # 改为实际 IP
+export ROS_MASTER_URI=http://<your_jetson_ip>:11311
 ```
 
 ### 8.8 权限设置
@@ -571,7 +568,7 @@ cd /mnt/nvme/ws/fuel_ws && catkin_make --pkg exploration_manager -j2
 
 - **文档版本**: 1.0
 - **最后更新**: 2026-09-27
-- **适配无人机**: nvidia@192.168.31.141
+- **适配无人机**: <user>@<your_jetson_ip>
 - **ROS 版本**: Noetic
 - **PX4 版本**: (运行 `rosrun mavros mavparam get SYS_AUTOSTART` 查看)
 - **最后标定日期**: 2026-09-21（双 IMU 外参）

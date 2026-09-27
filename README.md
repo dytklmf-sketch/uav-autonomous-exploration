@@ -119,8 +119,8 @@
 ## 🛠️ 配置要点
 
 ### 网络配置
-- 无人机 IP: `192.168.31.141`
-- ROS Master: `http://192.168.31.141:11311`
+- 无人机 IP: `<your_jetson_ip>`（例如：192.168.x.x）
+- ROS Master: `http://<your_jetson_ip>:11311`
 
 ### 遥控器设置
 - **CH5**: 急停开关（高位=急停）
@@ -184,7 +184,7 @@ cat ~/sensor_logs/$(ls -t ~/sensor_logs/ | head -1)/fastlio.log
 - **版本**: 1.0
 - **最后更新**: 2026-09-27
 - **ROS**: Noetic
-- **适配无人机**: nvidia@192.168.31.141
+- **适配硬件**: Jetson Orin/Xavier + PX4 + Livox MID-360 + CJ02 IMU
 
 ## 🔗 相关资源
 
@@ -205,10 +205,9 @@ cat ~/sensor_logs/$(ls -t ~/sensor_logs/ | head -1)/fastlio.log
 
 本项目仅供学习和研究使用。
 
-## 👤 联系方式
+## 👤 作者
 
-- 无人机 IP: nvidia@192.168.31.141
-- 密码: nvidia
+- **GitHub**: https://github.com/dytklmf-sketch/uav-autonomous-exploration
 
 ---
 
