@@ -92,7 +92,38 @@ source ~/.bashrc
 
 Livox MID-360 默认 IP 是 `192.168.1.1XX`，需要配置为与你的网络同网段。
 
-#### 方法 1：通过 Livox Viewer 配置（推荐）
+#### 方法 1：修改配置文件（推荐，最快）
+
+编辑雷达驱动配置文件：
+
+```bash
+# 编译工作空间后修改
+vim /mnt/nvme/ws/fastlio_ws/src/livox_ros_driver2/config/MID360_config.json
+```
+
+修改两处 IP：
+
+```json
+{
+  "MID360": {
+    "host_net_info" : {
+      "cmd_data_ip" : "192.168.31.141",    ← 改成你的 Jetson IP
+      "push_msg_ip": "192.168.31.141",     ← 改成你的 Jetson IP
+      "point_data_ip": "192.168.31.141",   ← 改成你的 Jetson IP
+      "imu_data_ip" : "192.168.31.141",    ← 改成你的 Jetson IP
+    }
+  },
+  "lidar_configs" : [
+    {
+      "ip" : "192.168.31.12",              ← 改成你的雷达 IP
+    }
+  ]
+}
+```
+
+**然后配置雷达 IP**（只需要做一次）：
+
+#### 方法 2：通过 Livox Viewer 配置雷达 IP（一次性操作）
 
 1. 在 Windows 电脑上下载并安装 [Livox Viewer](https://www.livoxtech.com/cn/downloads)
 2. 用网线将雷达连接到电脑
@@ -102,23 +133,15 @@ Livox MID-360 默认 IP 是 `192.168.1.1XX`，需要配置为与你的网络同�
 6. 修改子网掩码为 `255.255.255.0`
 7. 点击应用并重启雷达
 
-#### 方法 2：通过命令行配置
-
-```bash
-# 临时配置电脑网口 IP（假设网口是 eth0）
-sudo ifconfig eth0 192.168.1.50
-
-# 使用 Livox SDK 工具配置（需要先编译 livox_ros_driver2）
-# 这个方法较复杂，推荐使用方法 1
-
-# 配置完成后，将 Jetson 的网口 IP 设置为 192.168.31.141
-sudo ifconfig eth0 192.168.31.141
-```
+**配置完成后，雷达 IP 永久保存，以后只需修改配置文件即可。**
 
 #### 验证雷达连接
 
 ```bash
-# ping 雷达 IP（配置后）
+# 将 Jetson 网口 IP 设置为 192.168.31.141
+sudo ifconfig eth0 192.168.31.141
+
+# ping 雷达 IP
 ping 192.168.31.12
 
 # 应该能够正常 ping 通
