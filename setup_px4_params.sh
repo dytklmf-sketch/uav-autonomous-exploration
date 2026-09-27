@@ -73,17 +73,17 @@ set_param RC_MAP_FLTMODE 6
 echo ""
 echo "--- 板外控制参数 ---"
 set_param COM_OBS_AVOID 0
-set_param COM_RC_OVERRIDE 0
+set_param COM_RC_OVERRIDE 1
 
 # ============================================
 # 位置控制参数
 # ============================================
 echo ""
 echo "--- 位置控制参数 ---"
-set_param MPC_XY_VEL_MAX 1.5
-set_param MPC_Z_VEL_MAX_UP 1.0
-set_param MPC_Z_VEL_MAX_DN 0.8
-set_param MPC_XY_P 1.0
+set_param MPC_XY_VEL_MAX 4.0
+set_param MPC_Z_VEL_MAX_UP 1.5
+set_param MPC_Z_VEL_MAX_DN 1.5
+set_param MPC_XY_P 0.95
 set_param MPC_Z_P 1.0
 
 # ============================================

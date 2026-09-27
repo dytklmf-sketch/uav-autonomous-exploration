@@ -233,23 +233,101 @@ cp mid360_cj02.yaml /mnt/nvme/ws/fastlio_ws/src/FAST_LIO/config/
 
 确保飞控通过 USB 连接到 `/dev/ttyACM0`（或其他串口）。
 
-### 5.2 设置关键参数
+### 5.2 传感器校准（必须！）
 
-使用 QGroundControl 或命令行设置以下参数：
+⚠️ **重要**：在首次使用或更换飞控后，必须完成所有传感器校准。
+
+使用 QGroundControl 完成以下校准：
+
+#### 1. 加速度计校准
+- QGC → 设置 → 传感器 → Accelerometer
+- 按提示将飞机放置在 6 个方向（前后左右上下）
+- 每个方向保持静止直到提示音响起
+
+#### 2. 陀螺仪校准
+- QGC → 设置 → 传感器 → Gyroscope
+- 将飞机放置在水平面上保持静止
+- 等待校准完成（约 5-10 秒）
+
+#### 3. 磁力计校准（如果使用指南针）
+- QGC → 设置 → 传感器 → Compass
+- 按提示旋转飞机，覆盖所有方向
+- 如果不使用 GPS/指南针，可以跳过
+
+#### 4. 水平校准
+- QGC → 设置 → 传感器 → Level Horizon
+- 将飞机放置在水平面上
+- 点击校准并等待完成
+
+#### 5. 遥控器校准
+- QGC → 设置 → 遥控器 → 校准
+- 按提示移动所有摇杆和开关到极限位置
+- 确保所有通道正确识别
+
+### 5.3 电机和机架配置
+
+⚠️ **危险操作**：电机校准时会转动螺旋桨，**必须先拆除螺旋桨！**
+
+#### 1. 设置机架类型
+- QGC → 设置 → 机架
+- 选择对应的机架类型（四旋翼、X 型等）
+- 应用并重启
+
+#### 2. 电调（ESC）校准
+拆除所有螺旋桨后：
+- QGC → 设置 → 电源
+- 点击 "ESC 校准"
+- 按提示操作：
+  1. 拔掉电池
+  2. 将油门推到最大
+  3. 插上电池
+  4. 听到提示音后将油门拉到最低
+  5. 等待电调校准完成
+
+#### 3. 电机方向测试
+拆除所有螺旋桨后：
+- QGC → 设置 → 电机
+- 逐个测试每个电机：
+  - 滑动滑块使电机转动
+  - 确认电机编号与实际位置对应
+  - 确认转动方向正确（X 型：前左/后右逆时针，前右/后左顺时针）
+- ⚠️ 如果方向错误，需要调换电机连接线中的任意两根
+
+#### 4. 电池电压校准
+- QGC → 设置 → 电源
+- 设置电池串数（如 6S）
+- 用万用表测量实际电池电压
+- 输入实际电压进行校准
+
+### 5.4 设置 PX4 参数
+
+使用自动脚本设置参数：
 
 ```bash
-# 启动 MAVROS 连接飞控
-roslaunch mavros px4.launch fcu_url:=/dev/ttyACM0:921600
+# 启动 MAVROS
+roslaunch mavros px4.launch fcu_url:=/dev/ttyACM0:921600 &
 
-# 在另一个终端设置参数
-rosrun mavros mavparam set EKF2_EV_CTRL 15
-rosrun mavros mavparam set EKF2_HGT_REF 3
-rosrun mavros mavparam set MIS_TAKEOFF_ALT 0.5
-rosrun mavros mavparam set COM_DISARM_LAND 3.0
-rosrun mavros mavparam set RC_MAP_FLTMODE 6
+# 等待 MAVROS 连接
+sleep 5
+
+# 运行参数设置脚本
+cd ~
+./setup_px4_params.sh
 ```
 
-完整参数列表请参考 [UAV_CONFIG.md](UAV_CONFIG.md) 第 2 节。
+或手动设置关键参数（见 [px4_params.txt](px4_params.txt)）。
+
+### 5.5 遥控器通道设置
+
+在 QGC 中配置：
+- **CH5**：Kill Switch（急停开关）
+  - 低位：正常飞行
+  - 高位：立即切换到手动模式（急停）
+  
+- **CH6**：飞行模式切换
+  - 高位：Offboard（允许板外控制）
+  - 中位：Position（位置保持）
+  - 低位：Manual（手动模式）
 
 ---
 
