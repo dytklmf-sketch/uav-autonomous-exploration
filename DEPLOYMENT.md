@@ -33,26 +33,22 @@ cd uav-autonomous-exploration
 
 ## 🔧 第二步：安装依赖
 
-### 2.1 安装 ROS Noetic
+### 2.1 安装 ROS Noetic（使用小鱼一键安装）
 
 ```bash
-# 添加 ROS 源
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+# 使用小鱼的一键安装脚本
+wget http://fishros.com/install -O fishros && . fishros
 
-# 安装 ROS
-sudo apt update
-sudo apt install -y ros-noetic-desktop-full
+# 根据提示选择：
+# 1. 选择 ROS 版本：Noetic（适用于 Ubuntu 20.04）
+# 2. 选择安装类型：Desktop-Full（完整版）
+# 3. 等待安装完成
 
 # 安装 MAVROS
 sudo apt install -y ros-noetic-mavros ros-noetic-mavros-extras
 
 # 下载 GeographicLib 数据集
 sudo /opt/ros/noetic/lib/mavros/install_geographiclib_datasets.sh
-
-# 初始化 rosdep
-sudo rosdep init
-rosdep update
 ```
 
 ### 2.2 安装编译工具
