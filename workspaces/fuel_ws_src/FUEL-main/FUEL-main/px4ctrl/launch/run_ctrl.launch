@@ -1,0 +1,47 @@
+<launch>
+	<arg name="mavros_ns" default="/drone_0/mavros" />
+	<arg name="odom_topic" default="/drone_0/mavros/local_position/odom" />
+	<arg name="pose_topic" default="/drone_0/mavros/local_position/pose" />
+	<arg name="takeoff_topic" default="/px4ctrl/takeoff_land" />
+	<arg name="auto_takeoff" default="false" />
+	<arg name="takeoff_height" default="1.0" />
+	<arg name="stable_speed_thresh" default="0.15" />
+	<arg name="stable_duration" default="2.0" />
+	<arg name="debug_logger" default="false" />
+	<arg name="debug_log_bag" default="true" />
+	<arg name="debug_log_root" default="/home/nvidia/fuel_debug_logs" />
+
+	<node pkg="px4ctrl" type="px4ctrl_node" name="px4ctrl" output="screen">
+		<param name="auto_mode" value="true" />
+		<!-- 中文注释：这里把 odom 显式接到 drone_0/mavros 的里程计输出 -->
+		<remap from="~odom" to="$(arg odom_topic)" />
+		<remap from="~mavros/state" to="$(arg mavros_ns)/state" />
+		<remap from="~mavros/extended_state" to="$(arg mavros_ns)/extended_state" />
+		<remap from="~mavros/imu/data" to="$(arg mavros_ns)/imu/data" />
+		<remap from="~mavros/rc/in" to="$(arg mavros_ns)/rc/in" />
+		<remap from="~mavros/battery" to="$(arg mavros_ns)/battery" />
+		<remap from="~mavros/setpoint_raw/attitude" to="$(arg mavros_ns)/setpoint_raw/attitude" />
+		<remap from="~mavros/setpoint_raw/local" to="$(arg mavros_ns)/setpoint_raw/local" />
+		<remap from="~mavros/set_mode" to="$(arg mavros_ns)/set_mode" />
+		<remap from="~mavros/cmd/arming" to="$(arg mavros_ns)/cmd/arming" />
+		<remap from="~mavros/cmd/command" to="$(arg mavros_ns)/cmd/command" />
+
+		<remap from="~cmd" to="/planning/pos_cmd" />
+
+		<rosparam command="load" file="$(find px4ctrl)/config/ctrl_param_fpv.yaml" />
+	</node>
+
+	<!-- 自动起飞脚本默认关闭，需要时再显式打开 -->
+	<node pkg="px4ctrl" type="auto_takeoff.py" name="auto_takeoff" output="screen" if="$(arg auto_takeoff)">
+		<param name="pose_topic" value="$(arg pose_topic)" />
+		<param name="takeoff_topic" value="$(arg takeoff_topic)" />
+		<param name="takeoff_height" value="$(arg takeoff_height)" />
+		<param name="stable_speed_thresh" value="$(arg stable_speed_thresh)" />
+		<param name="stable_duration" value="$(arg stable_duration)" />
+	</node>
+
+	<node pkg="px4ctrl" type="flight_debug_logger.py" name="flight_debug_logger" output="screen" if="$(arg debug_logger)">
+		<param name="record_bag" value="$(arg debug_log_bag)" />
+		<param name="log_root" value="$(arg debug_log_root)" />
+	</node>
+</launch>

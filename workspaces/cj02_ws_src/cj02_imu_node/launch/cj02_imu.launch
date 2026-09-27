@@ -1,0 +1,18 @@
+<launch>
+    <!-- CJ02-IMU driver, namespaced so topics are /<ns>/imu/data_raw etc. -->
+    <arg name="ns" default="drone_0/cj02" />
+    <arg name="port" default="/dev/ttyUSB0" />
+    <arg name="baud" default="460800" />
+
+    <group ns="$(arg ns)">
+        <node pkg="cj02_imu_node" type="cj02_imu_node" name="cj02_imu_node" output="screen">
+            <param name="port" type="string" value="$(arg port)" />
+            <param name="baud" type="int" value="$(arg baud)" />
+            <param name="frame_id" type="string" value="imu_link" />
+            <!-- 驱动源码用绝对话题名(/imu/xxx), remap 成相对名以进入命名空间 -->
+            <remap from="/imu/data_raw" to="imu/data_raw" />
+            <remap from="/imu/data" to="imu/data" />
+            <remap from="/imu/attitude" to="imu/attitude" />
+        </node>
+    </group>
+</launch>

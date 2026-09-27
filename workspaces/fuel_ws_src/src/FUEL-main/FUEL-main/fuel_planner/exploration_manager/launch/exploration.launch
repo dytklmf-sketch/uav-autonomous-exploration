@@ -1,0 +1,159 @@
+<launch>
+  <!-- size of map, change the size in x, y, z according to your application -->
+  <arg name="drone_id" default="0"/>
+  <!-- size of map, change the size in x, y, z according to your application -->
+  <arg name="map_size_x_" value="20.0"/>
+  <arg name="map_size_y_" value="20.0"/>
+  <arg name="map_size_z_" value="3.5"/>
+
+  <arg name="init_x" default="0.0"/>
+  <arg name="init_y" default="0.0"/>
+  <arg name="init_z" default="0.5"/> 
+
+  <!-- 探索 box 边界, 可被 start_all 命令行覆盖 (roslaunch box_max_x:=.. 等) -->
+  <arg name="box_min_x" default="-2.5"/>
+  <arg name="box_min_y" default="-2.5"/>
+  <arg name="box_min_z" default="0.2"/>
+  <arg name="box_max_x" default="2.5"/>
+  <arg name="box_max_y" default="2.5"/>
+  <arg name="box_max_z" default="0.8"/>
+
+
+  <!-- topic of your odometry such as VIO or LIO -->
+  <arg name="odom_topic" value="/drone_$(arg drone_id)/mavros/local_position/odom" />
+  <arg name="pose_topic" value="/drone_$(arg drone_id)/mavros/vision_pose/pose" />
+  <arg name="takeoff_topic" value="/drone_$(arg drone_id)/px4ctrl/takeoff_land" />
+  <arg name="auto_takeoff" default="false" />
+  <arg name="takeoff_height" default="0.5" />
+  <arg name="stable_speed_thresh" default="0.15" />
+  <arg name="stable_duration" default="2.0" />
+  <arg name="debug_logger" default="false" />
+  <arg name="debug_log_bag" default="true" />
+  <arg name="debug_log_root" default="/home/nvidia/fuel_debug_logs" />
+
+<group ns="drone_$(arg drone_id)">
+
+  <arg name="map_origin_x" default="0.0" />
+  <arg name="map_origin_y" default="0.0" />
+
+  <node pkg="tf" type="static_transform_publisher" name="tf_world_to_map" 
+        args="$(arg map_origin_x) $(arg map_origin_y) 0 0 0 0 world drone_$(arg drone_id)_map 100" />
+
+  <node pkg="tf" type="static_transform_publisher" name="tf_map_to_camera_init" 
+        args="0 0 0 0 0 0 drone_$(arg drone_id)_map drone_$(arg drone_id)_camera_init 100" />
+          
+  <node pkg="tf" type="static_transform_publisher" name="tf_body_to_camera" 
+        args="0.1 0 0 -1.57 0 -1.57 drone_$(arg drone_id)_base_link drone_$(arg drone_id)_camera_link 100"/>
+
+
+  <!-- main algorithm params -->  
+  <include file="$(find exploration_manager)/launch/algorithm.xml">
+
+    <arg name="map_size_x_" value="$(arg map_size_x_)"/>
+    <arg name="map_size_y_" value="$(arg map_size_y_)"/>
+    <arg name="map_size_z_" value="$(arg map_size_z_)"/>
+
+    <arg name="box_min_x" value="$(arg box_min_x)"/>
+    <arg name="box_min_y" value="$(arg box_min_y)"/>
+    <arg name="box_min_z" value="$(arg box_min_z)"/>
+    <arg name="box_max_x" value="$(arg box_max_x)"/>
+    <arg name="box_max_y" value="$(arg box_max_y)"/>
+    <arg name="box_max_z" value="$(arg box_max_z)"/>
+  
+
+    <arg name="odometry_topic" value="$(arg odom_topic)"/>
+    <!-- sensor pose: transform of camera frame in the world frame -->
+    <arg name="sensor_pose_topic" value="/drone_$(arg drone_id)/mavros/vision_pose/pose"/>
+    <!-- depth topic: depth image, 640x480 by default -->
+    <!-- cloud topic: point cloud measurement  -->
+    <!-- subscribe ONLY TO ONE of the two topics -->
+    <arg name="depth_topic" value="/drone_$(arg drone_id)/camera/aligned_depth_to_color/image_raw"/>
+    <!-- <arg name="cloud_topic" value="/pcl_render_node/cloud"/> -->
+    <arg name="cloud_topic" value="/drone_$(arg drone_id)/cloud_registered"/> 
+    <!-- intrinsic params of the depth camera -->
+    <arg name="cx" value="321.046"/>
+    <arg name="cy" value="243.450"/>
+    <arg name="fx" value="387.229"/>
+    <arg name="fy" value="387.229"/>
+
+    <!-- maximum velocity and acceleration the drone will reach -->
+    <arg name="max_vel" value="0.2" />
+    <arg name="max_acc" value="0.2" />
+  </include>
+
+  <!-- trajectory server -->
+  <node pkg="plan_manage" name="traj_server" type="traj_server" output="screen">
+    <remap from="/position_cmd" to="planning/pos_cmd"/>
+    <remap from="/odom_world" to="$(arg odom_topic)"/>
+    <param name="traj_server/time_forward" value="1.5" type="double"/>
+    <param name="traj_server/pub_traj_id" value="4" type="int"/>
+    <param name="traj_server/init_x" value="$(arg init_x)" type="double"/>
+    <param name="traj_server/init_y" value="$(arg init_y)" type="double"/>
+    <param name="traj_server/init_z" value="$(arg init_z)" type="double"/>
+
+    <param name="perception_utils/top_angle" value="0.56125" type="double"/>
+    <param name="perception_utils/left_angle" value="0.69222" type="double"/>
+    <param name="perception_utils/right_angle" value="0.68901" type="double"/>
+    <param name="perception_utils/max_dist" value="2.0" type="double"/>
+    <param name="perception_utils/vis_dist" value="1.0" type="double"/>
+  </node>
+
+  <node pkg="waypoint_generator" name="waypoint_generator" type="waypoint_generator" output="screen">
+    <remap from="~odom" to="$(arg odom_topic)"/>        
+    <remap from="~goal" to="/move_base_simple/goal"/>
+    <remap from="~traj_start_trigger" to="/traj_start_trigger" />
+    <param name="waypoint_type" value="point"/>    
+  </node>
+
+
+  <!-- 20260918: 相机已拆, 感知改用 FAST-LIO 点云 (cloud_topic 上面的 cloud_registered)
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+        <arg name="camera" value="camera"/>
+        <arg name="enable_depth" value="true"/>
+        <arg name="align_depth" value="true"/>
+        <arg name="depth_width" value="640"/>
+        <arg name="depth_height" value="480"/>
+        <arg name="depth_fps" value="30"/>
+        <arg name="color_width" value="640"/>
+        <arg name="color_height" value="480"/>
+        <arg name="color_fps" value="30"/>
+        <param name="frame_id" value="drone_$(arg drone_id)_camera_link"/>
+  </include>
+  -->
+ 
+	<node pkg="px4ctrl" type="px4ctrl_node" name="px4ctrl" output="screen">
+	    <remap from="~odom" to="$(arg odom_topic)" />
+	    <remap from="~cmd" to="planning/pos_cmd" />
+
+	    <remap from="~mavros/state" to="/drone_$(arg drone_id)/mavros/state" />
+	    <remap from="~mavros/extended_state" to="/drone_$(arg drone_id)/mavros/extended_state" />
+	    <remap from="~mavros/imu/data" to="/drone_$(arg drone_id)/mavros/imu/data" />
+	    <remap from="~mavros/rc/in" to="/drone_$(arg drone_id)/mavros/rc/in" />
+	    <remap from="~mavros/battery" to="/drone_$(arg drone_id)/mavros/battery" />
+	    <remap from="~mavros/setpoint_raw/attitude" to="/drone_$(arg drone_id)/mavros/setpoint_raw/attitude" />
+	    <remap from="~mavros/setpoint_raw/local" to="/drone_$(arg drone_id)/mavros/setpoint_raw/local" />
+	    <remap from="~mavros/set_mode" to="/drone_$(arg drone_id)/mavros/set_mode" />
+	    <remap from="~mavros/cmd/arming" to="/drone_$(arg drone_id)/mavros/cmd/arming" />
+	    <remap from="~mavros/cmd/command" to="/drone_$(arg drone_id)/mavros/cmd/command" />
+
+	    <rosparam command="load" file="$(find px4ctrl)/config/ctrl_param_fpv.yaml" />
+	    <param name="auto_mode" value="true" />
+	</node>
+
+
+	<node pkg="px4ctrl" type="auto_takeoff.py" name="auto_takeoff" output="screen" if="$(arg auto_takeoff)">
+	    <param name="pose_topic" value="$(arg pose_topic)" />
+	    <param name="takeoff_topic" value="$(arg takeoff_topic)" />
+	    <param name="takeoff_height" value="$(arg takeoff_height)" />
+	    <param name="stable_speed_thresh" value="$(arg stable_speed_thresh)" />
+	    <param name="stable_duration" value="$(arg stable_duration)" />
+	</node>
+
+	<node pkg="px4ctrl" type="flight_debug_logger.py" name="flight_debug_logger" output="screen" if="$(arg debug_logger)">
+	    <param name="record_bag" value="$(arg debug_log_bag)" />
+	    <param name="log_root" value="$(arg debug_log_root)" />
+	</node>
+</group>
+
+
+</launch>
