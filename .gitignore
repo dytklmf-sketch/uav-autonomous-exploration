@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ROS
+build/
+devel/
+*.bag
+*.log
+.catkin_workspace
+
+# Logs
+sensor_logs/
+fuel_debug_logs/
+*.stdout
+
+# Backup files
+*.bak
+*.bak_*
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp files
+/tmp/
+*.tmp
+*.temp
