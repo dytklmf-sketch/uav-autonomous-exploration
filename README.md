@@ -18,6 +18,12 @@
 ├── UAV_CONFIG.md               # 完整配置说明文档（必读！）
 ├── FUEL_AUTO_README.md         # FUEL 自动飞行详细说明
 │
+├── workspaces/                  # 完整 ROS 工作空间源码
+│   ├── fastlio_ws_src/         # FAST-LIO + Livox 驱动
+│   ├── fuel_ws_src/            # FUEL 自主探索
+│   ├── cj02_ws_src/            # CJ02 IMU 驱动
+│   └── catkin_ws_src/          # RealSense 相机驱动
+│
 ├── start_sensors.sh            # 启动传感器栈（Livox/IMU/FAST-LIO/MAVROS）
 ├── start_all.sh                # 启动全栈（传感器 + FUEL）
 ├── start_fuel.sh               # 仅启动 FUEL
