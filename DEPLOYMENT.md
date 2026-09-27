@@ -65,22 +65,63 @@ sudo apt install -y \
     libopencv-dev
 ```
 
-### 2.3 设置环境变量
+### 2.3 设置环境变量和无人机编号
 
-编辑 `~/.bashrc`，添加以下内容（**修改 IP 为你的实际 IP**）：
+编辑 `~/.bashrc`，添加以下内容（**根据你的实际情况修改**）：
 
 ```bash
 # ROS 环境
 source /opt/ros/noetic/setup.bash
 
-# 网络配置（修改为你的实际 IP）
+# 网络配置（修改为你的 Jetson 实际 IP）
 export ROS_IP=192.168.31.141
 export ROS_MASTER_URI=http://192.168.31.141:11311
+
+# 无人机编号（0 或 1，根据你的设置）
+# 如果你的命名空间是 /drone_0，则设置为 0
+# 如果你的命名空间是 /drone_1，则设置为 1
+export DRONE_ID=0
 ```
 
 应用环境变量：
 ```bash
 source ~/.bashrc
+```
+
+### 2.4 配置 Livox MID-360 雷达 IP
+
+Livox MID-360 默认 IP 是 `192.168.1.1XX`，需要配置为与你的网络同网段。
+
+#### 方法 1：通过 Livox Viewer 配置（推荐）
+
+1. 在 Windows 电脑上下载并安装 [Livox Viewer](https://www.livoxtech.com/cn/downloads)
+2. 用网线将雷达连接到电脑
+3. 配置电脑 IP 为 `192.168.1.50`（与雷达默认 IP 同网段）
+4. 打开 Livox Viewer，点击设备
+5. 修改雷达 IP 为 `192.168.31.12`（与 Jetson 同网段）
+6. 修改子网掩码为 `255.255.255.0`
+7. 点击应用并重启雷达
+
+#### 方法 2：通过命令行配置
+
+```bash
+# 临时配置电脑网口 IP（假设网口是 eth0）
+sudo ifconfig eth0 192.168.1.50
+
+# 使用 Livox SDK 工具配置（需要先编译 livox_ros_driver2）
+# 这个方法较复杂，推荐使用方法 1
+
+# 配置完成后，将 Jetson 的网口 IP 设置为 192.168.31.141
+sudo ifconfig eth0 192.168.31.141
+```
+
+#### 验证雷达连接
+
+```bash
+# ping 雷达 IP（配置后）
+ping 192.168.31.12
+
+# 应该能够正常 ping 通
 ```
 
 ---
@@ -156,7 +197,28 @@ chmod +x ~/*.sh
 chmod +x ~/*.py
 ```
 
-### 4.2 复制配置文件
+### 4.2 配置无人机编号
+
+⚠️ **重要**：所有脚本默认使用 `drone_0` 命名空间。如果你需要使用 `drone_1`，运行配置脚本：
+
+```bash
+# 配置为 drone_0（默认，无需修改）
+./config_drone_id.sh 0
+
+# 或配置为 drone_1
+./config_drone_id.sh 1
+
+# 重新加载环境变量
+source ~/.bashrc
+```
+
+此脚本会自动修改：
+- 所有 shell 脚本中的命名空间
+- 所有 Python 脚本中的命名空间
+- FAST-LIO launch 文件
+- ~/.bashrc 中的 DRONE_ID 环境变量
+
+### 4.3 复制配置文件
 
 ```bash
 # 复制 FAST-LIO 配置（如果还没有）
